@@ -7,34 +7,82 @@ public class PlayerController : MonoBehaviour
 
     [SerializeField]
     private float _speed;
-
-    private bool _mouseMoved = false;
     private Vector3 _mouseDest;
+
+    public enum PlayerAnimState
+    {
+        Idle,
+        Run,
+        Jump,
+        Die,
+    }
+    private PlayerAnimState _animState = PlayerAnimState.Idle;
 
     void Start()
     {
-        Managers.Input.KeyAction -= OnMove;
-        Managers.Input.KeyAction += OnMove;
+        //Managers.Input.KeyAction -= OnMove;
+        //Managers.Input.KeyAction += OnMove;
         Managers.Input.MouseAction -= OnMouseClicked;
         Managers.Input.MouseAction += OnMouseClicked;
     }
 
+    void OnIdle()
+    {
+        Animator anim = GetComponent<Animator>();
+        anim.SetFloat("speed", 0);
+    }
+
+    void OnRun()
+    {
+        Animator anim = GetComponent<Animator>();
+        anim.SetFloat("speed", 2);
+        Vector3 dir = _mouseDest - transform.position;
+        dir.y = 0;
+        if (dir.magnitude < 0.001f)
+        {
+            _animState = PlayerAnimState.Idle;
+        }
+        else
+        {
+            float moveDist = Mathf.Clamp(Time.deltaTime * _speed, 0, dir.magnitude); // 목적지가 얼마 안남았을 때를 위해
+            transform.position += dir.normalized * moveDist;
+            transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(dir), 0.3f);
+        }
+    }
+
+    void OnJump()
+    {
+
+    }
+
+    void OnDie()
+    {
+
+    }
+
+    void OnFootGround()
+    {
+        Debug.Log("뚜벅");
+    }
+
     void Update()
     {
-        if(_mouseMoved)
+        switch(_animState)
         {
-            Vector3 dir = _mouseDest - transform.position;
-            if(dir.magnitude < 0.001f)
-            {
-                _mouseMoved = false;
-            }
-            else
-            {
-                float moveDist = Mathf.Clamp(Time.deltaTime * _speed, 0, dir.magnitude); // 목적지가 얼마 안남았을 때를 위해
-                transform.position += dir.normalized * moveDist;
-                transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(dir), 0.3f);
-            }
+            case PlayerAnimState.Idle:
+                OnIdle();
+                break;
+            case PlayerAnimState.Run:
+                OnRun();
+                break;
+            case PlayerAnimState.Jump:
+                OnJump();
+                break;
+            case PlayerAnimState.Die:
+                OnDie();
+                break;
         }
+
     }
 
     private void OnMove()
@@ -72,8 +120,6 @@ public class PlayerController : MonoBehaviour
         }
         movePosition = movePosition.normalized;
         transform.position += movePosition * Time.deltaTime * _speed;
-
-        _mouseMoved = false;
     }
 
     private void OnMouseClicked(Defines.MouseEvent mouseEvent)
@@ -86,7 +132,7 @@ public class PlayerController : MonoBehaviour
             LayerMask layerMask = LayerMask.GetMask("Ground");
             if (Physics.Raycast(ray, out hit, 40, layerMask))
             {
-                _mouseMoved = true;
+                _animState = PlayerAnimState.Run;
                 _mouseDest = hit.point;
             }
         }
