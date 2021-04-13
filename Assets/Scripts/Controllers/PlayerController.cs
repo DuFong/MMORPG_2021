@@ -24,7 +24,7 @@ public class PlayerController : MonoBehaviour
         if(_mouseMoved)
         {
             Vector3 dir = _mouseDest - transform.position;
-            if(dir.magnitude < 0.0001f)
+            if(dir.magnitude < 0.001f)
             {
                 _mouseMoved = false;
             }
@@ -78,14 +78,17 @@ public class PlayerController : MonoBehaviour
 
     private void OnMouseClicked(Defines.MouseEvent mouseEvent)
     {
-        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-
-        RaycastHit hit;
-        LayerMask layerMask = LayerMask.GetMask("Ground");
-        if(Physics.Raycast(ray, out hit, 40, layerMask))
+        if (mouseEvent == Defines.MouseEvent.Press)
         {
-            _mouseMoved = true;
-            _mouseDest = hit.point;
+            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+
+            RaycastHit hit;
+            LayerMask layerMask = LayerMask.GetMask("Ground");
+            if (Physics.Raycast(ray, out hit, 40, layerMask))
+            {
+                _mouseMoved = true;
+                _mouseDest = hit.point;
+            }
         }
     }
 }
